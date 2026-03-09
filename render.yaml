@@ -8,8 +8,8 @@ services:
     plan: starter
     
     # Build
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: cd backend && npm install && npm run build && cd ..
+    startCommand: cd backend && npm start
     
     # Health check
     healthCheckPath: /health
@@ -40,9 +40,3 @@ databases:
     databaseName: moneymess
     plan: starter
     region: oregon
-    
-# Para usar este archivo:
-# 1. Subir a GitHub en la raíz del repositorio
-# 2. Ir a render.com/infrastructure
-# 3. Conectar repositorio
-# 4. Render automáticamente detectará este archivo
