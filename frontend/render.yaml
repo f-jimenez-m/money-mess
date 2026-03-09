@@ -5,10 +5,10 @@
 services:
   - type: web
     name: moneymess-frontend
-    runtime: static
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm run preview
     
     envVars:
       - key: VITE_API_URL
-        value: https://moneymess-backend.onrender.com
+        value: https://money-mess-api.onrender.com
