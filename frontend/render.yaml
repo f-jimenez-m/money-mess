@@ -1,0 +1,14 @@
+# render.yaml - Configuración de Render para Frontend
+# Ubicación: frontend/render.yaml
+# Render ejecutará comandos desde este directorio
+
+services:
+  - type: web
+    name: moneymess-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    
+    envVars:
+      - key: VITE_API_URL
+        value: https://moneymess-backend.onrender.com
