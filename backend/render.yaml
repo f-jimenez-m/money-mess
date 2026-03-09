@@ -1,0 +1,48 @@
+# render.yaml - Configuración automática de Render
+# Documentación: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: moneymess-backend
+    runtime: node
+    plan: starter
+    
+    # Build
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 3000
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_EXPIRES_IN
+        value: 7d
+        
+      # Valores secretos (configurar en Render dashboard)
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+databases:
+  - name: moneymess-db
+    databaseName: moneymess
+    plan: starter
+    region: oregon
+    
+# Para usar este archivo:
+# 1. Subir a GitHub en la raíz del repositorio
+# 2. Ir a render.com/infrastructure
+# 3. Conectar repositorio
+# 4. Render automáticamente detectará este archivo

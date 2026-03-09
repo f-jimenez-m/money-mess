@@ -29,7 +29,7 @@ const getConfig = (): Config => {
 
   return {
     database: {
-      url: process.env.DATABASE_URL || 'mysql://localhost:3306/moneymess',
+      url: process.env.DATABASE_URL || 'postgresql://localhost:5432/moneymess',
     },
     server: {
       nodeEnv,
