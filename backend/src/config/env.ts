@@ -29,7 +29,8 @@ const getConfig = (): Config => {
 
   return {
     database: {
-      url: process.env.DATABASE_URL || 'postgresql://localhost:5432/moneymess',
+      // Local fallback aligned with docker-compose defaults.
+      url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/moneymess',
     },
     server: {
       nodeEnv,

@@ -45,7 +45,7 @@ git push origin main
    - **Name**: `moneymess-backend`
    - **Environment**: `Node`
    - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
+  - **Start Command**: `npm run prisma:migrate:deploy && npm start`
 4. **Environment Variables**: Agregar desde la sección "Environment"
 
 ### Paso 4: Configurar Variables de Entorno en Render
@@ -66,13 +66,8 @@ LOG_LEVEL=info
 ### Paso 5: Deploy y Migración de Base de Datos
 
 1. Render hará build automáticamente
-2. **Una vez que el servicio está en "Live":**
-   - Ir a la sección "Logs" del servicio
-   - Abrir la terminal interactiva (icono de terminal)
-   - Ejecutar migración:
-     ```bash
-     npx prisma migrate deploy
-     ```
+2. El `startCommand` ejecutará `prisma migrate deploy` en cada inicio antes de levantar la app
+3. Verifica en logs que aparezca la ejecución de migraciones sin errores
 
 ### Paso 6: Verificar que Todo Funciona
 

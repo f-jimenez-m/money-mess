@@ -9,7 +9,7 @@ services:
     
     # Build
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: npm run prisma:migrate:deploy && npm start
     
     # Health check
     healthCheckPath: /health
@@ -29,7 +29,9 @@ services:
         
       # Valores secretos (configurar en Render dashboard)
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: moneymess-db
+          property: connectionString
       - key: JWT_SECRET
         sync: false
       - key: CORS_ORIGIN

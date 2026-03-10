@@ -39,7 +39,7 @@ Create a `.env` file based on `.env.example`:
 cp .env.example .env
 ```
 
-Update `DATABASE_URL` with your MariaDB connection string.
+Update `DATABASE_URL` with your PostgreSQL connection string.
 
 ### 3. Run migrations
 
@@ -100,15 +100,15 @@ Response:
 2. Connect your GitHub repository
 3. Set environment variables in Render dashboard
 4. Render will auto-detect the Node.js application
-5. Build command: `npm run build && npm run prisma:migrate`
-6. Start command: `npm start`
+5. Build command: `npm install && npm run build`
+6. Start command: `npm run prisma:migrate:deploy && npm start`
 
 ## Stack
 
 - **Framework**: Fastify 4
 - **Language**: TypeScript
 - **ORM**: Prisma
-- **Database**: MariaDB
+- **Database**: PostgreSQL
 - **Validation**: (coming soon)
 - **Authentication**: JWT
 - **Logging**: Pino
