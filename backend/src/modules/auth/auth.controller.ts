@@ -53,6 +53,8 @@ export class AuthController {
           error: 'Email already registered',
         });
       }
+      // Log error for easier debugging in development
+      try { request.log?.error(error); } catch (e) { /* ignore logging errors */ }
       throw error;
     }
   }
@@ -106,6 +108,8 @@ export class AuthController {
           error: 'Invalid credentials',
         });
       }
+      // Log error for easier debugging in development
+      try { request.log?.error(error); } catch (e) { /* ignore logging errors */ }
       throw error;
     }
   }
@@ -141,6 +145,8 @@ export class AuthController {
           error: 'User not found',
         });
       }
+      // Log error for easier debugging in development
+      try { request.log?.error(error); } catch (e) { /* ignore logging errors */ }
       throw error;
     }
   }
