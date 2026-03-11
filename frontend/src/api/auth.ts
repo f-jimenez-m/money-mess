@@ -11,30 +11,31 @@ export interface RegisterRequest {
   passwordConfirm: string
 }
 
-export interface AuthResponse {
-  accessToken: string
-  user: {
-    id: string
-    email: string
-    createdAt: string
-    updatedAt: string
-  }
-}
-
 export interface User {
   id: string
   email: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface AuthPayload {
+  accessToken: string
+  user: User
+}
+
+export interface ApiResponse<T> {
+  success: boolean
+  message?: string
+  data: T
 }
 
 export const authAPI = {
   register: (data: RegisterRequest) =>
-    apiClient.post<AuthResponse>('/api/auth/register', data),
+    apiClient.post<ApiResponse<AuthPayload>>('/api/auth/register', data),
 
   login: (data: LoginRequest) =>
-    apiClient.post<AuthResponse>('/api/auth/login', data),
+    apiClient.post<ApiResponse<AuthPayload>>('/api/auth/login', data),
 
   getProfile: () =>
-    apiClient.get<User>('/api/auth/me'),
+    apiClient.get<ApiResponse<User>>('/api/auth/me'),
 }

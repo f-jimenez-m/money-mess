@@ -21,6 +21,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/recurring',
+    name: 'Recurring',
+    component: () => import('@/views/RecurringView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/transactions',
     name: 'Transactions',
     component: () => import('@/views/TransactionsView.vue'),

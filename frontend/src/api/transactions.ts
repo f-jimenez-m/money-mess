@@ -4,10 +4,12 @@ export interface Transaction {
   id: string
   amount: number
   description: string
-  type: 'income' | 'expense'
+  type: 'income' | 'expense' | 'transfer'
   accountId: string
-  categoryId: string
+  categoryId?: string | null
   date: string
+  dueDate?: string
+  paidDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -15,9 +17,9 @@ export interface Transaction {
 export interface CreateTransactionRequest {
   amount: number
   description: string
-  type: 'income' | 'expense'
+  type: 'income' | 'expense' | 'transfer'
   accountId: string
-  categoryId: string
+  categoryId?: string | null
   date: string
 }
 
@@ -27,15 +29,22 @@ export interface GetTransactionsQuery {
   accountId?: string
 }
 
+export interface ApiResponse<T> {
+  success: boolean
+  message?: string
+  data: T
+  count?: number
+}
+
 export const transactionsAPI = {
   getTransactions: (query?: GetTransactionsQuery) =>
-    apiClient.get<{ data: Transaction[]; total: number }>('/api/transactions', { params: query }),
+    apiClient.get<ApiResponse<Transaction[]>>('/api/transactions', { params: query }),
 
   createTransaction: (data: CreateTransactionRequest) =>
-    apiClient.post<Transaction>('/api/transactions', data),
+    apiClient.post<ApiResponse<Transaction>>('/api/transactions', data),
 
   updateTransaction: (id: string, data: Partial<CreateTransactionRequest>) =>
-    apiClient.put<Transaction>(`/api/transactions/${id}`, data),
+    apiClient.put<ApiResponse<Transaction>>(`/api/transactions/${id}`, data),
 
   deleteTransaction: (id: string) =>
     apiClient.delete(`/api/transactions/${id}`),

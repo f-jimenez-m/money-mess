@@ -31,6 +31,11 @@
           />
         </div>
 
+        <div class="flex items-center space-x-2">
+          <input id="remember" type="checkbox" v-model="remember" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+          <label for="remember" class="text-sm text-gray-700">Recordarme (solo correo)</label>
+        </div>
+
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {{ error }}
         </div>
@@ -60,23 +65,42 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const error = ref('')
 
+const remembered = localStorage.getItem('rememberedEmail')
+const remember = ref<boolean>(!!remembered)
+
 const form = reactive({
-  email: 'demo@example.com',
-  password: 'password123',
+  email: remembered ?? '',
+  password: '',
 })
 
 const handleLogin = async () => {
   error.value = ''
   try {
     await authStore.login(form.email, form.password)
+    // guardar/limpiar el email según "remember"
+    if (remember.value) {
+      localStorage.setItem('rememberedEmail', form.email)
+    } else {
+      localStorage.removeItem('rememberedEmail')
+    }
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Sesión iniciada',
+      timer: 900,
+      showConfirmButton: false,
+    })
+
     router.push('/dashboard')
   } catch {
     error.value = authStore.error || 'Error al iniciar sesión'
+    Swal.fire({ icon: 'error', title: 'Error', text: error.value })
   }
 }
 </script>

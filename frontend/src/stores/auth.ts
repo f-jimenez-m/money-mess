@@ -4,7 +4,8 @@ import { authAPI, User } from '@/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('token'))
+  const rawToken = localStorage.getItem('token')
+  const token = ref<string | null>(rawToken && rawToken !== 'undefined' ? rawToken : null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -15,9 +16,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const response = await authAPI.register({ email, password, passwordConfirm })
-      token.value = response.data.accessToken
-      user.value = response.data.user
-      localStorage.setItem('token', token.value)
+      // backend devuelve { success, message, data: { accessToken, user } }
+      token.value = response.data?.data?.accessToken ?? null
+      user.value = response.data?.data?.user ?? null
+      if (token.value) localStorage.setItem('token', token.value)
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al registrarse'
       throw err
@@ -31,9 +33,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const response = await authAPI.login({ email, password })
-      token.value = response.data.accessToken
-      user.value = response.data.user
-      localStorage.setItem('token', token.value)
+      // backend devuelve { success, message, data: { accessToken, user } }
+      token.value = response.data?.data?.accessToken ?? null
+      user.value = response.data?.data?.user ?? null
+      if (token.value) localStorage.setItem('token', token.value)
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al iniciar sesión'
       throw err
@@ -50,7 +53,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authAPI.getProfile()
-      user.value = response.data
+      // backend devuelve { success, data: user }
+      user.value = response.data?.data ?? null
     } catch {
       logout()
     }

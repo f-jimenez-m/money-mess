@@ -13,8 +13,20 @@ export const useTransactionStore = defineStore('transaction', () => {
     error.value = null
     try {
       const response = await transactionsAPI.getTransactions({ page, limit, accountId })
-      transactions.value = response.data.data
-      total.value = response.data.total
+      // Asegurar que `amount` sea number, normalizar `type` a minúsculas y exponer `date` para la UI
+      transactions.value = (response.data.data ?? []).map((t: any) => {
+        const amount = Number(t.amount)
+        const type = (t.type || '').toString().toLowerCase()
+        // mapear campo de fecha: usar dueDate, paidDate o createdAt
+        const date = t.dueDate ?? t.paidDate ?? t.createdAt ?? null
+        return {
+          ...t,
+          amount: Number.isNaN(amount) ? 0 : amount,
+          type,
+          date,
+        }
+      })
+      total.value = response.data.count ?? 0
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al obtener transacciones'
       throw err
@@ -25,9 +37,27 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   const createTransaction = async (data: CreateTransactionRequest) => {
     try {
-      const response = await transactionsAPI.createTransaction(data)
-      transactions.value.unshift(response.data)
-      return response.data
+      // Normalizar payload al formato backend: type en mayúsculas y usar 'dueDate'
+      const payload: any = {
+        description: data.description,
+        amount: data.amount,
+        type: (data.type || '').toString().toUpperCase(),
+        accountId: data.accountId,
+        categoryId: data.categoryId || null,
+        dueDate: data.date,
+        allowPastDate: true,
+      }
+      const response = await transactionsAPI.createTransaction(payload)
+      // backend responde { success, data: transaction }
+      const created = response.data?.data ?? response.data
+      const normalized = {
+        ...created,
+        amount: Number(created.amount),
+        type: (created.type || '').toString().toLowerCase(),
+        date: created.dueDate ?? created.paidDate ?? created.createdAt ?? null,
+      }
+      transactions.value.unshift(normalized as any)
+      return normalized
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al crear transacción'
       throw err
@@ -37,11 +67,12 @@ export const useTransactionStore = defineStore('transaction', () => {
   const updateTransaction = async (id: string, data: Partial<CreateTransactionRequest>) => {
     try {
       const response = await transactionsAPI.updateTransaction(id, data)
+      const updated = response.data?.data ?? response.data
       const index = transactions.value.findIndex(t => t.id === id)
       if (index !== -1) {
-        transactions.value[index] = response.data
+        transactions.value[index] = updated
       }
-      return response.data
+      return updated
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al actualizar transacción'
       throw err

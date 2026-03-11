@@ -43,7 +43,7 @@
               >
                 <div>
                   <p class="font-semibold text-gray-900">{{ transaction.description }}</p>
-                  <p class="text-sm text-gray-600">{{ formatDate(transaction.date) }}</p>
+                    <p class="text-sm text-gray-600">{{ formatDate(transaction.date) }}</p>
                 </div>
                 <p
                   :class="{
@@ -52,7 +52,7 @@
                   }"
                   class="text-lg font-bold"
                 >
-                  {{ transaction.type === 'income' ? '+' : '-' }}${{ transaction.amount.toFixed(2) }}
+                  {{ transaction.type === 'income' ? '+' : '-' }}${{ Math.abs(transaction.amount).toFixed(2) }}
                 </p>
               </div>
             </div>
@@ -83,6 +83,39 @@
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
                 </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta</label>
+                <select
+                  v-model="newTransaction.accountId"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                >
+                  <option value="">Selecciona una cuenta</option>
+                  <option v-for="acc in accountStore.accounts" :key="acc.id" :value="acc.id">
+                    {{ acc.name }} ({{ acc.currency }})
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                <select
+                  v-model="newTransaction.categoryId"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                >
+                  <option value="">Selecciona una categoría</option>
+                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                    {{ cat.name }} ({{ cat.type }})
+                  </option>
+                </select>
+                <div v-if="categories.length === 0" class="mt-2">
+                  <button @click.prevent="createDefaultCategories" :disabled="creatingDefaults" class="text-sm text-indigo-600 underline">
+                    {{ creatingDefaults ? 'Creando categorías...' : 'Crear categorías sugeridas' }}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -125,10 +158,16 @@ import { reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTransactionStore } from '@/stores/transaction'
+import { useAccountStore } from '@/stores/account'
+import { categoriesAPI, Category } from '@/api/categories'
+import { ref } from 'vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const transactionStore = useTransactionStore()
+const accountStore = useAccountStore()
+const categories = ref<Category[]>([])
+const creatingDefaults = ref(false)
 
 const newTransaction = reactive({
   description: '',
@@ -139,11 +178,15 @@ const newTransaction = reactive({
   categoryId: '',
 })
 
+
 onMounted(async () => {
   try {
+    await accountStore.getAccounts()
     await transactionStore.getTransactions()
+    const res = await categoriesAPI.getCategories()
+    categories.value = res.data?.data ?? []
   } catch (error) {
-    console.error('Error loading transactions:', error)
+    console.error('Error loading transactions/accounts/categories:', error)
   }
 })
 
@@ -153,6 +196,8 @@ const createTransaction = async () => {
     return
   }
 
+  // Allow past dates: backend accepts `allowPastDate` flag (sent from the store)
+
   try {
     await transactionStore.createTransaction({
       description: newTransaction.description,
@@ -160,7 +205,7 @@ const createTransaction = async () => {
       amount: newTransaction.amount,
       date: newTransaction.date,
       accountId: newTransaction.accountId,
-      categoryId: newTransaction.categoryId,
+      categoryId: newTransaction.categoryId || undefined,
     })
     newTransaction.description = ''
     newTransaction.amount = 0
@@ -170,7 +215,55 @@ const createTransaction = async () => {
   }
 }
 
-const formatDate = (date: string) => new Date(date).toLocaleDateString('es-ES')
+const formatDate = (date?: string | null) => {
+  if (!date) return ''
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('es-ES')
+}
+
+const createDefaultCategories = async () => {
+  if (creatingDefaults.value) return
+  creatingDefaults.value = true
+  try {
+    // Verificar que hay token local
+    const token = localStorage.getItem('token')
+    if (!token || token === 'undefined') {
+      alert('No estás autenticado. Por favor inicia sesión.')
+      authStore.logout()
+      router.push('/login')
+      return
+    }
+    const defaults = [
+      { name: 'Alimentos', type: 'EXPENSE', color: '#F87171' },
+      { name: 'Transporte', type: 'EXPENSE', color: '#FBBF24' },
+      { name: 'Servicios', type: 'EXPENSE', color: '#60A5FA' },
+      { name: 'Entretenimiento', type: 'EXPENSE', color: '#A78BFA' },
+      { name: 'Salario', type: 'INCOME', color: '#34D399' },
+    ]
+
+    for (const c of defaults) {
+      try {
+        await categoriesAPI.createCategory(c as any)
+      } catch (e: any) {
+        if (e?.response?.status === 401) {
+          alert('Sesión expirada. Por favor inicia sesión de nuevo.')
+          authStore.logout()
+          router.push('/login')
+          return
+        }
+        // ignore other individual create errors
+      }
+    }
+
+    const res = await categoriesAPI.getCategories()
+    categories.value = res.data?.data ?? []
+  } catch (e) {
+    console.error('Error creando categorías por defecto', e)
+  } finally {
+    creatingDefaults.value = false
+  }
+}
 
 const handleLogout = () => {
   authStore.logout()

@@ -46,7 +46,7 @@
                   <p class="text-sm text-gray-600">{{ account.type }}</p>
                 </div>
                 <div class="text-right">
-                  <p class="font-bold text-indigo-600">{{ account.currency }} {{ account.initialBalance.toFixed(2) }}</p>
+                  <p class="font-bold text-indigo-600">{{ account.currency }} {{ (account.initialBalance ?? 0).toFixed(2) }}</p>
                   <button
                     @click="deleteAccount(account.id)"
                     class="text-sm text-red-600 hover:text-red-700 mt-1"
@@ -80,11 +80,10 @@
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                   required
                 >
-                  <option value="cash">Efectivo</option>
-                  <option value="checking">Corriente</option>
-                  <option value="savings">Ahorros</option>
-                  <option value="credit_card">Tarjeta de crédito</option>
-                  <option value="investment">Inversión</option>
+                  <option value="CASH">Efectivo</option>
+                  <option value="BANK">Corriente</option>
+                  <option value="SAVINGS">Ahorros</option>
+                  <option value="CREDIT">Tarjeta de crédito</option>
                 </select>
               </div>
 
@@ -133,14 +132,18 @@ import { reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAccountStore } from '@/stores/account'
+import { useTransactionStore } from '@/stores/transaction'
+import type { CreateAccountRequest } from '@/api/accounts'
 
 const router = useRouter()
-const authStore = useAuthStore()
-const accountStore = useAccountStore()
+  const authStore = useAuthStore()
+  const accountStore = useAccountStore()
+  const transactionStore = useTransactionStore()
 
-const newAccount = reactive({
+const newAccount = reactive<CreateAccountRequest>({
   name: '',
-  type: 'checking',
+  // usar los enums que espera el backend: CASH | BANK | CREDIT | SAVINGS
+  type: 'BANK',
   initialBalance: 0,
   currency: 'USD',
 })
@@ -148,6 +151,8 @@ const newAccount = reactive({
 onMounted(async () => {
   try {
     await accountStore.getAccounts()
+    // refrescar transacciones para incluir la transacción inicial creada en backend
+    try { await transactionStore.getTransactions() } catch (e) { /* noop */ }
   } catch (error) {
     console.error('Error loading accounts:', error)
   }
@@ -161,6 +166,8 @@ const createAccount = async () => {
       initialBalance: newAccount.initialBalance,
       currency: newAccount.currency,
     })
+    // refrescar lista para obtener estado actualizado (y balances desde backend si disponible)
+    await accountStore.getAccounts()
     newAccount.name = ''
     newAccount.initialBalance = 0
   } catch (error) {

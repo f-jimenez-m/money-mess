@@ -12,7 +12,25 @@ export const useAccountStore = defineStore('account', () => {
     error.value = null
     try {
       const response = await accountsAPI.getAccounts()
-      accounts.value = response.data
+      // backend responde { success, data: Account[] }
+      const accs = response.data?.data ?? []
+
+      // Intentar obtener balances por cuenta y mapear a `initialBalance`
+      try {
+        const balRes = await accountsAPI.getBalances()
+        const balances = balRes.data?.data?.accounts ?? []
+        const balanceMap: Record<string, number> = {}
+        balances.forEach((b: any) => {
+          balanceMap[b.accountId] = Number(b.currentBalance ?? 0)
+        })
+
+        accounts.value = accs.map((a: any) => ({
+          ...a,
+          initialBalance: balanceMap[a.id] ?? 0,
+        }))
+      } catch (e) {
+        accounts.value = accs
+      }
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al obtener cuentas'
       throw err
@@ -24,8 +42,10 @@ export const useAccountStore = defineStore('account', () => {
   const createAccount = async (data: CreateAccountRequest) => {
     try {
       const response = await accountsAPI.createAccount(data)
-      accounts.value.push(response.data)
-      return response.data
+      // backend responde { success, data: account }
+      const created = response.data?.data
+      if (created) accounts.value.push(created)
+      return created
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al crear cuenta'
       throw err
@@ -35,11 +55,12 @@ export const useAccountStore = defineStore('account', () => {
   const updateAccount = async (id: string, data: Partial<CreateAccountRequest>) => {
     try {
       const response = await accountsAPI.updateAccount(id, data)
+      const updated = response.data?.data
       const index = accounts.value.findIndex(a => a.id === id)
-      if (index !== -1) {
-        accounts.value[index] = response.data
+      if (index !== -1 && updated) {
+        accounts.value[index] = updated
       }
-      return response.data
+      return updated
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Error al actualizar cuenta'
       throw err
