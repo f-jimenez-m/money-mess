@@ -11,6 +11,11 @@ export interface CreateTransactionDTO {
   amount: Decimal | number;
   description: string;
   dueDate: Date;
+  /**
+   * Si es true, permite enviar transacciones con fecha pasada.
+   * Usado por la UI para importar movimientos históricos.
+   */
+  allowPastDate?: boolean;
   recurringRuleId?: string;
   installmentNumber?: number;
   installmentTotal?: number;
@@ -22,6 +27,7 @@ export interface CreateTransferDTO {
   amount: Decimal | number;
   description?: string;
   dueDate: Date;
+  allowPastDate?: boolean;
   categoryId?: string;
 }
 

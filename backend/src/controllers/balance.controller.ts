@@ -29,7 +29,7 @@ export class BalanceController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id: accountId } = request.params;
 
       const balance = await this.balanceService.getAccountBalance(userId, accountId);
@@ -58,7 +58,7 @@ export class BalanceController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       const balances = await this.balanceService.getAllAccountsBalance(userId);
 
@@ -87,7 +87,7 @@ export class BalanceController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       const total = await this.balanceService.getTotalBalance(userId);
 

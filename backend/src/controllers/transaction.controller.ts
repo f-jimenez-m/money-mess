@@ -27,7 +27,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const dto = request.body;
 
       const transaction = await this.transactionService.createTransaction(userId, dto);
@@ -65,7 +65,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const dto = request.body;
 
       const transfer = await this.transactionService.createTransfer(userId, dto);
@@ -101,7 +101,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const query = request.query as any;
 
       // Usar prisma directamente para obtener transacciones con filtros
@@ -143,7 +143,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const transaction = await this.transactionService.getTransaction(userId, id);
@@ -175,7 +175,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const transaction = await this.transactionService.markTransactionAsPaid(userId, id);
@@ -206,7 +206,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const transaction = await this.transactionService.markTransactionAsPending(userId, id);
@@ -237,7 +237,7 @@ export class TransactionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       await this.transactionService.deleteTransaction(userId, id);

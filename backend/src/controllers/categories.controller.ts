@@ -20,7 +20,7 @@ export class CategoriesController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       const categories = await this.prisma.category.findMany({
         where: { userId },
@@ -48,7 +48,7 @@ export class CategoriesController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const category = await this.prisma.category.findFirst({
@@ -80,7 +80,7 @@ export class CategoriesController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       // Validate input
       const validation = CreateCategorySchema.safeParse(request.body);
@@ -131,7 +131,7 @@ export class CategoriesController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       // Verify category exists and belongs to user
@@ -188,7 +188,7 @@ export class CategoriesController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       // Verify category exists and belongs to user

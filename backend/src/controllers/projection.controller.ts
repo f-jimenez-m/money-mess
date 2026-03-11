@@ -25,7 +25,7 @@ export class ProjectionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id: accountId } = request.params;
       const query = request.query as any;
       const days = query.days ? parseInt(query.days) : 30;
@@ -62,7 +62,7 @@ export class ProjectionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const query = request.query as any;
       const days = query.days ? parseInt(query.days) : 30;
 
@@ -106,7 +106,7 @@ export class ProjectionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const query = request.query as any;
       const months = query.months ? parseInt(query.months) : 3;
 
@@ -156,7 +156,7 @@ export class ProjectionController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id: accountId } = request.params;
       const query = request.query as any;
       const days = query.days ? parseInt(query.days) : 30;

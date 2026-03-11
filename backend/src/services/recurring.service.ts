@@ -249,6 +249,60 @@ export class RecurringService {
   }
 
   /**
+   * Actualiza una regla de recurrencia
+   */
+  async updateRecurringRule(userId: string, ruleId: string, dto: Partial<CreateRecurringRuleDTO>): Promise<RecurringRuleResponse> {
+    const existing = await this.recurringRepo.findByIdAndUserId(ruleId, userId);
+    if (!existing) {
+      throw new AppError(404, 'Recurring rule not found', 'RECURRING_RULE_NOT_FOUND');
+    }
+
+    // Validaciones similares a create
+    if (dto.amount !== undefined) {
+      const amount = new Decimal(dto.amount as any);
+      if (amount.lte(0)) {
+        throw new ValidationError('Invalid amount', { amount: 'Amount must be greater than 0' });
+      }
+    }
+
+    if (dto.startDate) {
+      const startDate = new Date(dto.startDate as any);
+      if (startDate < new Date()) {
+        throw new ValidationError('Invalid start date', { startDate: 'Start date cannot be in the past' });
+      }
+    }
+
+    if (dto.endDate && dto.startDate) {
+      const startDate = new Date(dto.startDate as any);
+      const endDate = new Date(dto.endDate as any);
+      if (endDate < startDate) {
+        throw new ValidationError('Invalid end date', { endDate: 'End date must be after start date' });
+      }
+    }
+
+    if (dto.frequency === 'MONTHLY' && dto.dayOfMonth !== undefined) {
+      if ((dto.dayOfMonth as number) < 1 || (dto.dayOfMonth as number) > 31) {
+        throw new ValidationError('Invalid day of month', { dayOfMonth: 'Day of month must be between 1 and 31' });
+      }
+    }
+
+    const updated = await this.recurringRepo.update(ruleId, {
+      name: dto.name as any,
+      type: dto.type as any,
+      amount: dto.amount as any,
+      frequency: dto.frequency as any,
+      startDate: dto.startDate ? new Date(dto.startDate as any) : undefined,
+      endDate: dto.endDate ? new Date(dto.endDate as any) : undefined,
+      dayOfMonth: dto.dayOfMonth as any,
+      accountId: dto.accountId as any,
+      categoryId: dto.categoryId as any,
+      installmentsTotal: dto.installmentsTotal as any,
+    })
+
+    return this.mapToResponse(updated)
+  }
+
+  /**
    * Calcula la siguiente ocurrencia de una fecha según la frecuencia
    */
   private getNextOccurrence(date: Date, frequency: Frequency): Date {

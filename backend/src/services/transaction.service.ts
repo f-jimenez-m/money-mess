@@ -61,13 +61,15 @@ export class TransactionService {
       });
     }
 
-    // Validar que la fecha sea válida
+    // Validar que la fecha sea válida, salvo que el cliente solicite permitir fechas pasadas
     if (new Date(dto.dueDate) < new Date()) {
-      const now = new Date();
-      if (now.toDateString() !== new Date(dto.dueDate).toDateString()) {
-        throw new ValidationError('Invalid due date', {
-          dueDate: 'Due date cannot be in the past (unless today)',
-        });
+      if (!dto.allowPastDate) {
+        const now = new Date();
+        if (now.toDateString() !== new Date(dto.dueDate).toDateString()) {
+          throw new ValidationError('Invalid due date', {
+            dueDate: 'Due date cannot be in the past (unless today)',
+          });
+        }
       }
     }
 

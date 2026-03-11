@@ -27,7 +27,7 @@ export class RecurringController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const dto = request.body;
 
       const rule = await this.recurringService.createRecurringRule(userId, dto);
@@ -63,7 +63,7 @@ export class RecurringController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       const rules = await this.recurringService.getRecurringRules(userId);
 
@@ -88,7 +88,7 @@ export class RecurringController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const rule = await this.prisma.recurringRule.findFirst({
@@ -120,14 +120,40 @@ export class RecurringController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const body = (request.body || {}) as any;
+      // Si viene ruleId, generar solo para esa regla
+      if (body && body.ruleId) {
+        const upTo = body.upToDate ? new Date(body.upToDate) : new Date();
+        const generated = await this.recurringService.generateRecurringTransactions(body.ruleId, upTo);
+
+        // Persistir las transacciones generadas
+        if (generated.length > 0) {
+          await Promise.all(
+            generated.map((t) =>
+              this.prisma.transaction.create({
+                data: {
+                  userId: t.userId ?? (request.userId || (request.user as any)?.userId || (request.user as any)?.id),
+                  accountId: t.accountId,
+                  categoryId: t.categoryId || null,
+                  type: t.type as any,
+                  amount: t.amount as any,
+                  description: t.description,
+                  dueDate: t.dueDate,
+                  status: 'PENDING',
+                  paidDate: null,
+                  recurringRuleId: t.recurringRuleId || null,
+                },
+              })
+            )
+          );
+        }
+
+        return reply.send({ success: true, data: { generated: generated.length } });
+      }
 
       const result = await this.recurringService.executeRecurringGeneration();
 
-      return reply.send({
-        success: true,
-        data: result,
-      });
+      return reply.send({ success: true, data: result });
     } catch (error) {
       if (error instanceof ValidationError) {
         return reply.code(400).send({
@@ -135,6 +161,33 @@ export class RecurringController {
           error: error.message,
           details: (error as any).details,
         });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * PUT /recurring-rules/:id
+   * Actualizar una regla de recurrencia
+   */
+  async updateRecurringRule(
+    request: FastifyRequest<{
+      Params: { id: string };
+      Body: Partial<CreateRecurringRuleDTO>;
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
+      const { id } = request.params;
+      const dto = request.body;
+
+      const updated = await this.recurringService.updateRecurringRule(userId, id, dto);
+
+      return reply.send({ success: true, data: updated });
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return reply.code(400).send({ success: false, error: error.message, details: (error as any).details });
       }
       throw error;
     }
@@ -151,7 +204,7 @@ export class RecurringController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       await this.recurringService.deleteRecurringRule(userId, id);
@@ -199,6 +252,12 @@ export class RecurringController {
       '/api/recurring-rules/execute',
       { onRequest: [auth] },
       (request, reply) => controller.executeRecurringGeneration(request, reply)
+    );
+
+    fastify.put<{ Params: { id: string } }>(
+      '/api/recurring-rules/:id',
+      { onRequest: [auth] },
+      (request, reply) => controller.updateRecurringRule(request as any, reply)
     );
 
     fastify.delete<{ Params: { id: string } }>(

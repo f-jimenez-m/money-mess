@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { CreateAccountSchema, UpdateAccountSchema } from '@schemas';
 import { ValidationError, NotFoundError, AppError } from '@utils/errors';
 
@@ -20,7 +21,7 @@ export class AccountsController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       const accounts = await this.prisma.account.findMany({
         where: { userId },
@@ -48,7 +49,7 @@ export class AccountsController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       const account = await this.prisma.account.findFirst({
@@ -80,7 +81,7 @@ export class AccountsController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
 
       // Validate input
       const validation = CreateAccountSchema.safeParse(request.body);
@@ -111,7 +112,7 @@ export class AccountsController {
             userId,
             accountId: account.id,
             type: 'INCOME',
-            amount: initialBalance,
+            amount: new Decimal(initialBalance),
             description: `Initial balance: ${name}`,
             dueDate: new Date(),
             status: 'PAID',
@@ -153,7 +154,7 @@ export class AccountsController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       // Verify account exists and belongs to user
@@ -210,7 +211,7 @@ export class AccountsController {
     reply: FastifyReply
   ) {
     try {
-      const userId = (request.user as any).id;
+      const userId = request.userId || (request.user as any)?.userId || (request.user as any)?.id;
       const { id } = request.params;
 
       // Verify account exists and belongs to user
