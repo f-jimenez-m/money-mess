@@ -137,6 +137,7 @@ export class RecurringService {
 
       // Crear la transacción
       transactions.push({
+        userId: rule.userId,
         accountId: rule.accountId,
         categoryId: rule.categoryId || undefined,
         type: rule.type as 'INCOME' | 'EXPENSE',

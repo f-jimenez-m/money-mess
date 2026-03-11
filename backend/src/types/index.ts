@@ -130,6 +130,7 @@ export interface TransactionQueryOptions {
 // ============================================
 
 export interface GeneratedTransaction {
+  userId?: string;
   accountId: string;
   categoryId?: string;
   type: 'INCOME' | 'EXPENSE';
